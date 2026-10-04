@@ -1,0 +1,40 @@
+#version 450
+
+layout(local_size_x = 64) in;
+
+struct WaterParticle {
+    int type;
+    int life;
+    float posX;
+    float posY;
+    float startX, startY;
+    float dirX, dirY;
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    WaterParticle particles[];
+};
+
+uniform vec2 spawnOrigin;
+uniform vec2 direction;
+uniform int particleCount;
+uniform int spawnOffset;
+
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= particleCount) return;
+
+    uint bufferIndex = uint(spawnOffset) + id;
+
+    float spacing = 0.5;
+    float offset = float(id % 4);
+
+    particles[bufferIndex].posX   = spawnOrigin.x + direction.x * spacing;
+    particles[bufferIndex].posY   = spawnOrigin.y + direction.y * spacing;
+    particles[bufferIndex].startX = spawnOrigin.x + offset;
+    particles[bufferIndex].startY = spawnOrigin.y + offset;
+    particles[bufferIndex].dirX   = direction.x;
+    particles[bufferIndex].dirY   = direction.y;
+    particles[bufferIndex].life   = 50;
+    particles[bufferIndex].type   = 1;
+}

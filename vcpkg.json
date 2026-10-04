@@ -1,0 +1,16 @@
+{
+    "name": "onallfronts",
+    "version-string": "0.1.0",
+    "builtin-baseline": "19780d9cdf84d0944cf9a318666703b89ab6629c",
+    "dependencies": [
+        "glew",
+        "glm",
+        {
+            "name": "sfml",
+            "default-features": false,
+            "features": [
+                "graphics"
+            ]
+        }
+    ]
+}

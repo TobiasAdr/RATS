@@ -1,0 +1,51 @@
+#version 450
+
+layout(local_size_x = 64) in;
+
+struct PurpleRod {
+    float startX, startY;
+    float prevStartX, prevStartY;
+    float prevEndX, prevEndY;
+    float endX, endY;
+    float dirX, dirY;
+    float distTravelled;
+    float maxDist;
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    PurpleRod rods[];
+};
+
+uniform float posX;
+uniform float posY;
+uniform float dirX;
+uniform float dirY;
+uniform int spawnOffset;
+
+const int numRods = 30;
+const float spreadAngle = 30.0;
+
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= numRods) return;
+
+    uint bufferIndex = spawnOffset + id;
+
+    float t = float(id) / float(numRods - 1);
+    float angle = (-spreadAngle / 2.0 + t * spreadAngle) * 3.14159 / 180.0;
+
+    float cos_a = cos(angle);
+    float sin_a = sin(angle);
+    float rx = dirX * cos_a - dirY * sin_a;
+    float ry = dirX * sin_a + dirY * cos_a;
+
+    rods[bufferIndex].distTravelled = 0.0;
+    rods[bufferIndex].maxDist = 100.0;
+
+    rods[bufferIndex].startX = posX;
+    rods[bufferIndex].startY = posY;
+    rods[bufferIndex].endX = posX + rx * 5.0;
+    rods[bufferIndex].endY = posY + ry * 5.0;
+    rods[bufferIndex].dirX = rx;
+    rods[bufferIndex].dirY = ry;
+}

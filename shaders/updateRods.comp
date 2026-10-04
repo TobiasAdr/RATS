@@ -1,0 +1,65 @@
+#version 450
+
+layout(local_size_x = 64) in;
+
+struct PurpleRod {
+    float startX, startY;
+    float prevStartX, prevStartY;
+    float prevEndX, prevEndY;
+    float endX, endY;
+    float dirX, dirY;
+    float distTravelled;
+    float maxDist;
+};
+
+struct GPUEnemy {
+    float x, y;
+    float pad[2];
+};
+
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    PurpleRod rods[];
+};
+
+layout(std430, binding = 3) buffer EnemyBuffer {
+    GPUEnemy enemies[];
+};
+
+layout(std430, binding = 4) buffer HitBuffer {
+    int hits[];
+};
+
+uniform float deltaTime;
+uniform int enemyCount;
+
+void main() {
+    float speed = 100.0;
+
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= 300) return; 
+
+    if (rods[id].distTravelled >= rods[id].maxDist) return;
+
+    rods[id].prevStartX = rods[id].startX;
+    rods[id].prevStartY = rods[id].startY;
+    rods[id].prevEndX   = rods[id].endX;
+    rods[id].prevEndY   = rods[id].endY;
+
+    rods[id].startX += rods[id].dirX * speed * deltaTime;
+    rods[id].startY += rods[id].dirY * speed * deltaTime;
+    rods[id].distTravelled += speed * deltaTime;
+
+    rods[id].endX = rods[id].startX + rods[id].dirX * 5.0;
+    rods[id].endY = rods[id].startY + rods[id].dirY * 5.0;
+
+
+    for (int ei = 0; ei < enemyCount; ei++) {
+
+            float dx = float(rods[id].endX) - enemies[ei].x;
+            float dy = float(rods[id].endY) - enemies[ei].y;
+            if (dx*dx + dy*dy < 16.0 * 16.0) {
+                atomicOr(hits[ei], 1);
+            }
+     }
+}

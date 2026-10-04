@@ -1,0 +1,80 @@
+#version 450
+
+layout(local_size_x = 64) in;
+
+struct FirePlaceParticle {
+    float posX, posY;
+    float dirX, dirY;
+    float life;
+};
+
+layout(std430, binding = 0) buffer Particles {
+    FirePlaceParticle particles[];
+};
+
+uniform float deltaTime;
+uniform float time;
+uniform float originX;
+uniform float originY;
+
+float rand(float n)
+{
+    return fract(sin(n)*43758.5453123);
+}
+
+void main()
+{
+    uint id = gl_GlobalInvocationID.x;
+    if(id >= particles.length()) return;
+
+    FirePlaceParticle p = particles[id];
+    
+    if(p.life <= 0.0)
+    {
+        float seed = float(id);
+
+        p.life = 1 + rand(seed)*2.0;
+
+        p.posX = originX + (rand(seed*2.0)-0.5)*10.0;
+        p.posY = originY;
+
+        p.dirX = (rand(seed*3.0)-0.5)*2.0;
+        p.dirY = -20.0 - rand(seed*4.0)*30.0;
+    }
+
+    float group = (id % 4);
+
+    p.life -= deltaTime * 3;
+
+    p.posY += p.dirY * deltaTime / 2 ;
+
+    float phase = rand(float(id)*10.0)*6.2831;
+
+    float freq  = 2.0 + rand(float(id)*20.0)*5.0;
+
+    float heightFactor = (originY - p.posY)*0.08;
+
+    float normalizedHeight =
+    clamp((originY-p.posY)/50.0,0.0,1.0);
+
+    float widthFactor =
+        1.0 - normalizedHeight;
+
+    float wobble =
+        sin(time*freq + phase)
+        * (8.0*widthFactor);
+
+    p.posX += (p.dirX+wobble)*deltaTime;
+
+    float centerPull =
+        normalizedHeight*10.0;
+
+    p.posX +=
+        (originX-p.posX)
+        * centerPull
+        * deltaTime;
+  
+    p.dirX *= 0.30;
+
+    particles[id] = p;
+}

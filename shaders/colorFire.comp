@@ -1,0 +1,68 @@
+#version 450
+
+layout(local_size_x = 64) in;
+
+uniform float positionX;
+uniform float positionY;
+uniform float prevX;
+uniform float prevY;
+uniform int ssboOffset;
+
+layout(rgba8, binding = 2) uniform image2D outputImage;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+struct FirePixel {
+    int posX, posY;
+    float r, g, b, a;
+    float velX, velY;
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    FirePixel particles[];
+};
+
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= 64) return;
+
+    for (int dy = -6; dy <= 6; dy++) {
+        for (int dx = -6; dx <= 6; dx++) {
+            ivec2 prevCoord = ivec2(int(prevX) + dx, int(prevY) + dy);
+            imageStore(outputImage, prevCoord, vec4(0.0));
+        }
+    }
+
+    int pixelIndex = 0;
+
+    for (int dy = -4; dy <= 1; dy++) {
+        for (int dx = -4; dx <= 1; dx++) {
+
+            float variation = hash(vec2(dx, dy));
+            float angle = hash(vec2(float(id), float(pixelIndex))) * 6.2831;
+            float speed = 20.0 + hash(vec2(float(pixelIndex), float(id))) * 80.0;
+
+            float r = 1.0;
+            float g = clamp(variation * 0.6, 0.0, 1.0);
+            float b = clamp(variation * 0.1, 0.0, 1.0);
+            float a = clamp(0.6 + variation * 0.4, 0.0, 1.0);
+
+            ivec2 coord = ivec2(int(positionX) + dx, int(positionY) + dy);
+            imageStore(outputImage, coord, vec4(r, g, b, a));
+
+            uint bufferIndex = uint(ssboOffset) + id * 36u + uint(pixelIndex);
+            particles[bufferIndex].posX = coord.x;
+            particles[bufferIndex].posY = coord.y;
+            particles[bufferIndex].r = r;
+            particles[bufferIndex].g = g;
+            particles[bufferIndex].b = b;
+            particles[bufferIndex].a = a;
+            particles[bufferIndex].velX = cos(angle) * speed;
+            particles[bufferIndex].velY = sin(angle) * speed;
+
+            pixelIndex++;
+        }
+    }
+}

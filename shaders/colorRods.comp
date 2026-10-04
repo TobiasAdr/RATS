@@ -1,0 +1,98 @@
+#version 450
+
+layout(local_size_x = 64) in;
+
+struct PurpleRod {
+    float startX, startY;
+    float prevStartX, prevStartY;
+    float prevEndX, prevEndY;
+    float endX, endY;
+    float dirX, dirY;
+    float distTravelled;
+    float maxDist;
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    PurpleRod rods[];
+};
+
+layout(rgba8, binding = 2) uniform image2D outputImage;
+
+void main() {
+   
+    uint id = gl_GlobalInvocationID.x;
+
+    if (id >= 300) return;
+
+    if (rods[id].distTravelled >= rods[id].maxDist) {
+    
+    float pdx = rods[id].prevEndX - rods[id].prevStartX;
+    float pdy = rods[id].prevEndY - rods[id].prevStartY;
+    int psteps = max(1, int(sqrt(pdx * pdx + pdy * pdy)));
+
+    if (psteps <= 1600) {
+        for (int s = 0; s <= psteps; s++) {
+        
+            float t = float(s) / float(psteps);
+            int x = int(rods[id].prevStartX + t * pdx);
+            int y = int(rods[id].prevStartY + t * pdy);
+            imageStore(outputImage, ivec2(x, y), vec4(0.0));
+    
+        }
+    }
+
+    float dx = rods[id].endX - rods[id].startX;
+    float dy = rods[id].endY - rods[id].startY;
+    int steps = max(1, int(sqrt(dx * dx + dy * dy)));
+
+    for (int s = 0; s <= steps; s++) {
+
+        float t = float(s) / float(steps);
+        int x = int(rods[id].startX + t * dx);
+        int y = int(rods[id].startY + t * dy);
+        imageStore(outputImage, ivec2(x, y), vec4(0.0));
+    
+    }
+
+    rods[id].startX = -10000.0;
+    rods[id].startY = -10000.0;
+    rods[id].endX   = -10000.0;
+    rods[id].endY   = -10000.0;
+    rods[id].prevStartX = -10000.0;
+    rods[id].prevStartY = -10000.0;
+    rods[id].prevEndX   = -10000.0;
+    rods[id].prevEndY   = -10000.0;
+
+    return;
+}
+
+    float pdx = rods[id].prevEndX - rods[id].prevStartX;
+    float pdy = rods[id].prevEndY - rods[id].prevStartY;
+    int psteps = max(1, int(sqrt(pdx * pdx + pdy * pdy)));
+
+    if (psteps > 1600) return;
+
+    for (int s = 0; s <= psteps; s++) {
+        float t = float(s) / float(psteps);
+        int x = int(rods[id].prevStartX + t * pdx);
+        int y = int(rods[id].prevStartY + t * pdy);
+        imageStore(outputImage, ivec2(x, y), vec4(0.0));
+    }
+
+    float dx = rods[id].endX - rods[id].startX;
+    float dy = rods[id].endY - rods[id].startY;
+    float length = sqrt(dx * dx + dy * dy);
+    int steps = max(1, int(length));
+
+    for (int s = 0; s <= steps; s++) {
+        float t = float(s) / float(steps);
+        int x = int(rods[id].startX + t * dx);
+        int y = int(rods[id].startY + t * dy);
+
+        vec4 colorA = vec4(0.0, 0.35, 0.08, 1.0);
+vec4 colorB = vec4(0.3, 0.45, 0.0, 1.0);
+vec4 color = mix(colorA, colorB, pow(1.0 - t, 2.0));
+
+        imageStore(outputImage, ivec2(x, y), color);
+    }
+}

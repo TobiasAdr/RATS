@@ -1,0 +1,40 @@
+#version 450
+
+layout (local_size_x = 64) in;
+
+struct FireParticle {
+
+	int type;
+	int life;
+	float posX;
+	float posY;
+	float startX, startY;
+	float dirX, dirY;
+
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    FireParticle particles[];
+};
+
+uniform vec2 spawnOrigin;
+uniform vec2 direction;
+uniform int particleCount;
+
+void main(){
+
+	uint id = gl_GlobalInvocationID.x;
+    if (id >= particleCount) return;
+
+	FireParticle p;
+    p.posX = posX;
+    p.posY = posY;
+    p.dirX = dirX;
+    p.dirY = dirY;
+	
+	for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+			
+			
+
+}

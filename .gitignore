@@ -1,0 +1,6 @@
+/build/
+/build-*/
+/.vs/
+/x64/
+/vcpkg/
+.vscode/

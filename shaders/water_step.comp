@@ -1,0 +1,84 @@
+#version 450
+layout(local_size_x = 64) in;
+
+struct WaterParticle {
+
+	int type;
+	int life;
+	float posX;
+	float posY;
+	float startX, startY;
+	float dirX, dirY;
+
+};
+
+struct GPUEnemy {
+    float x, y;
+    float pad[2];
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    WaterParticle particles[];
+};
+
+layout(std430, binding = 3) buffer EnemyBuffer {
+    GPUEnemy enemies[];
+};
+
+layout(std430, binding = 4) buffer HitBuffer {
+    int hits[];
+};
+
+uniform float elapsedTime;
+uniform int particleCount;
+uniform int enemyCount;
+
+void main() {
+  
+    uint id = gl_GlobalInvocationID.x;
+  
+    if (id >= particleCount) return;
+
+    WaterParticle p = particles[id];
+    if (p.life - 1 <= 0) {
+
+    particles[id].life = 0;
+    particles[id].posX = -100.0;
+    particles[id].posY = -100.0;
+    return;
+    
+    }
+
+    float len = sqrt(p.dirX * p.dirX + p.dirY * p.dirY);
+    float dx = p.dirX / len;
+    float dy = p.dirY / len;
+    float perpX = -dy;
+    float perpY =  dx;
+
+    float traveled = (p.posX - p.startX) * dx
+                   + (p.posY - p.startY) * dy;
+    
+    float offsetX = id * p.dirX;
+    float offsetY = id * p.dirY;
+
+    float newTraveled = traveled + 0.7;
+    float baseX = p.startX + dx * newTraveled;
+    float baseY = p.startY + dy * newTraveled;
+
+    float wave = 3 * sin(0.314 * newTraveled - elapsedTime );
+
+    particles[id].posX = baseX + perpX * wave;
+    particles[id].posY = baseY + perpY * wave;
+    particles[id].life = p.life - 1;
+    particles[id].type = 1;
+    
+     for (int ei = 0; ei < enemyCount; ei++) {
+
+            float dx = float(particles[id].posX) - enemies[ei].x;
+            float dy = float(particles[id].posY) - enemies[ei].y;
+            if (dx*dx + dy*dy < 16.0 * 16.0) {
+                atomicOr(hits[ei], 1);
+            }
+     }
+
+   }

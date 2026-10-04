@@ -1,0 +1,17 @@
+#version 450
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(rgba8, binding = 1) uniform image2D outputImage;
+
+void main() {
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(outputImage);
+    if (coord.x >= size.x || coord.y >= size.y) return;
+
+    vec4 current = imageLoad(outputImage, coord);
+    vec4 faded = current - vec4(0.004, 0.004, 0.004, 0.004);
+    faded = max(faded, vec4(0.0));
+
+    imageStore(outputImage, coord, faded);
+}   
