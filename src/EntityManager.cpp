@@ -25,7 +25,6 @@ void EntityManager::spawnEnemies(float deltaTime)
     {
         spawnTimer = 0.f;
 
-        
         float x = 700.f + (rand() % 400);
         float y = 700.f + (rand() % 400);
 
@@ -35,14 +34,18 @@ void EntityManager::spawnEnemies(float deltaTime)
 
 void EntityManager::initPlayer(int windowWidth, int windowHeight)
 {
-
-    this->playerIdleTexture.loadFromFile("resources/Wizard3.png");
+    this->playerIdleTexture.loadFromFile("resources/Wizard4.png");
     this->playerSprite.emplace(this->playerIdleTexture);
 
-    this->playerSprite->setTextureRect(sf::IntRect({0, 0}, {32, 32}));
-    this->playerSprite->setScale(sf::Vector2f(0.5f, 0.5f));
+    this->playerSprite->setTextureRect(
+        sf::IntRect({0, 0}, {1145, 1201}));
+
+    this->playerSprite->setScale(sf::Vector2f(0.02f, 0.02f));
+
     this->player.setPosition(sf::Vector2f(
-        windowWidth / 2.3f, windowHeight / 1.3f));
+        windowWidth / 2.3f,
+        windowHeight / 1.3f));
+
     this->playerSprite->setPosition(this->player.getPosition());
 }
 
@@ -88,7 +91,6 @@ void EntityManager::updatePlayer(float deltaTime)
 
     this->player.setRunning(false);
 
-    
     this->player.update(deltaTime);
 
     this->player.setVelocityX(0.0f);
@@ -97,7 +99,6 @@ void EntityManager::updatePlayer(float deltaTime)
     if (this->enemyManager.processPlayerHit(player.getPosition().x, player.getPosition().y))
     {
 
-        
         this->player.removeHP(1);
     }
 }

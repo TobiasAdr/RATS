@@ -18,20 +18,17 @@ class EntityManager
 
 private:
 	float spawnTimer = 0.f;
-	float spawnInterval = 3.f;
+	float spawnInterval = 0.2f;
 
-	
 	Player player;
 	sf::Texture playerIdleTexture;
 	Weapon weapon = Weapon::Water;
 
-	
 	std::unique_ptr<OpenGLElementSimulation> sandSimulator;
 	std::unique_ptr<OpenGLWaterSimulation> waterSimulator;
 	std::unique_ptr<OpenGLFireSimulation> fireSimulator;
 	std::unique_ptr<OpenGLBouncingRods> rodsSimulator;
 
-	
 	TileRendererOpenGL tileRenderer;
 	firePlaceOpenGL firePlace = firePlaceOpenGL(875.0f, 825.0f);
 
@@ -47,7 +44,6 @@ private:
 
 	std::optional<sf::Sprite> playerSprite;
 
-	
 	void initPlayer(int windowWidth, int windowHeight);
 	void updatePlayer(float deltaTime);
 
